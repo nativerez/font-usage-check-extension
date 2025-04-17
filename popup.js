@@ -19,6 +19,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
     
     // Store font data globally for sorting
     window.fontData = results[0].result;
+    window.currentTabId = tab.id;
     
     if (window.fontData && window.fontData.length > 0) {
       statusDiv.textContent = 'Analysis complete!';
@@ -108,8 +109,29 @@ function displayFontTable(fontData, sortColumn = null, sortDirection = 'asc') {
   // Create table body
   const tbody = document.createElement('tbody');
   
+  // Track if we have any hoverable rows
+  let hasHoverableRows = false;
+  
   fontData.forEach(item => {
     const row = document.createElement('tr');
+    
+    // Add data attribute for element ID if available
+    if (item.elementId) {
+      row.dataset.elementId = item.elementId;
+      
+      // Add hover event listeners for highlighting
+      row.addEventListener('mouseenter', () => {
+        highlightElement(item.elementId);
+      });
+      
+      row.addEventListener('mouseleave', () => {
+        removeHighlight();
+      });
+      
+      // Add visual indicator that this row is hoverable
+      row.classList.add('hoverable');
+      hasHoverableRows = true;
+    }
     
     // Create cells for each column
     const familyCell = document.createElement('td');
@@ -141,6 +163,37 @@ function displayFontTable(fontData, sortColumn = null, sortDirection = 'asc') {
   
   table.appendChild(tbody);
   resultDiv.appendChild(table);
+  
+  // Show the highlight status message if we have hoverable rows
+  const highlightStatus = document.getElementById('highlight-status');
+  if (hasHoverableRows) {
+    highlightStatus.style.display = 'block';
+  } else {
+    highlightStatus.style.display = 'none';
+  }
+}
+
+// Function to highlight an element in the page
+function highlightElement(elementId) {
+  if (!window.currentTabId) return;
+  
+  chrome.tabs.sendMessage(window.currentTabId, {
+    action: 'highlightElement',
+    elementId: elementId
+  }).catch(error => {
+    console.error('Error highlighting element:', error);
+  });
+}
+
+// Function to remove highlight
+function removeHighlight() {
+  if (!window.currentTabId) return;
+  
+  chrome.tabs.sendMessage(window.currentTabId, {
+    action: 'removeHighlight'
+  }).catch(error => {
+    console.error('Error removing highlight:', error);
+  });
 }
 
 // Function to sort font data and redisplay table

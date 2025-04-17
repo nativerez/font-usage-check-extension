@@ -1,5 +1,9 @@
 // Font Usage Analysis Script
 (function() {
+    // Create a mapping to store references to analyzed elements by unique ID
+    window.fontUsageElements = {};
+    let elementIdCounter = 1;
+
     function analyzeFontUsage() {
         const fontData = [];
         const textToElement = new Map(); // Map to track unique text and their most specific elements
@@ -65,6 +69,10 @@
                         textContent : 
                         textContent.substring(0, 47) + '...';
                     
+                    // Assign a unique ID to this element for later reference
+                    const elementId = `font-element-${elementIdCounter++}`;
+                    window.fontUsageElements[elementId] = node;
+                    
                     // Add as structured data
                     fontData.push({
                         fontFamily,
@@ -72,7 +80,8 @@
                         fontWeight,
                         lineHeight,
                         elementTag,
-                        textExample: formattedText
+                        textExample: formattedText,
+                        elementId // Add the element ID to the data
                     });
                 } catch (err) {
                     console.error("Error processing a text element:", err);
@@ -110,13 +119,18 @@
                             textContent : 
                             textContent.substring(0, 47) + '...';
                         
+                        // Assign a unique ID to this element for later reference
+                        const elementId = `font-element-${elementIdCounter++}`;
+                        window.fontUsageElements[elementId] = element;
+                        
                         fontData.push({
                             fontFamily,
                             fontSize,
                             fontWeight,
                             lineHeight,
                             elementTag,
-                            textExample: formattedText
+                            textExample: formattedText,
+                            elementId // Add the element ID to the data
                         });
                     }
                 }
@@ -132,10 +146,63 @@
                 fontWeight: "-",
                 lineHeight: "-",
                 elementTag: "-",
-                textExample: "Error analyzing fonts: " + error.message
+                textExample: "Error analyzing fonts: " + error.message,
+                elementId: null
             }];
         }
     }
+
+    // Add message listener to handle element highlighting
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === "highlightElement") {
+            const element = window.fontUsageElements[message.elementId];
+            if (element) {
+                // Store original outline
+                const originalOutline = element.style.outline;
+                const originalZIndex = element.style.zIndex;
+                const originalPosition = element.style.position;
+                
+                // Apply highlight
+                element.style.outline = "2px solid red";
+                element.style.zIndex = "9999";
+                
+                // If the element is static, make it relative to ensure z-index works
+                if (getComputedStyle(element).position === 'static') {
+                    element.style.position = "relative";
+                }
+                
+                sendResponse({success: true});
+                
+                // Record that we're highlighting this element
+                window.currentlyHighlighted = {
+                    element,
+                    originalOutline,
+                    originalZIndex,
+                    originalPosition
+                };
+            } else {
+                sendResponse({success: false, error: "Element not found"});
+            }
+            return true; // Required for async response
+        }
+        
+        else if (message.action === "removeHighlight") {
+            if (window.currentlyHighlighted) {
+                const { element, originalOutline, originalZIndex, originalPosition } = window.currentlyHighlighted;
+                
+                // Restore original styles
+                element.style.outline = originalOutline;
+                element.style.zIndex = originalZIndex;
+                element.style.position = originalPosition;
+                
+                window.currentlyHighlighted = null;
+                sendResponse({success: true});
+            } else {
+                sendResponse({success: false, error: "No element currently highlighted"});
+            }
+            return true; // Required for async response
+        }
+    });
     
     // Analyze and return the results
     return analyzeFontUsage();
