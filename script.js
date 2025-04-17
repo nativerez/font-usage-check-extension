@@ -6,13 +6,44 @@
 (() => {
     const fontStyles = {};
     const fontTextExamples = {};
+    const textToElement = new Map(); // Map to track unique text and their most specific elements
 
-    document.querySelectorAll('*').forEach(node => {
+    // First pass: Collect all texts and their deepest elements (depth-first traversal)
+    function processNode(node, depth = 0) {
+        // Process children first (deeper nodes)
+        for (const child of node.childNodes) {
+            processNode(child, depth + 1);
+        }
+
+        // Then process current node
+        if (node.nodeType === Node.TEXT_NODE) {
+            const textContent = node.textContent?.trim();
+            if (textContent) {
+                const parentElement = node.parentElement;
+                if (parentElement) {
+                    const existingEntry = textToElement.get(textContent);
+                    // Update only if this is deeper or we haven't seen this text
+                    if (!existingEntry || depth > existingEntry.depth) {
+                        textToElement.set(textContent, {
+                            element: parentElement,
+                            depth: depth
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Process the entire document
+    processNode(document.body);
+
+    // Second pass: Collect font styles
+    textToElement.forEach((entry, textContent) => {
+        const node = entry.element;
         const computedStyle = window.getComputedStyle(node);
         
-        // Skip elements with no text content or that are not visible
-        const textContent = node.textContent?.trim();
-        if (!textContent || computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+        // Skip if not visible
+        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
             return;
         }
         
@@ -36,12 +67,14 @@
             fontTextExamples[fontFamily][styleSignature] = new Set();
         }
         
-        // Add the text content as an example (limit length to avoid huge outputs)
-        if (textContent.length <= 50) {
-            fontTextExamples[fontFamily][styleSignature].add(textContent);
-        } else {
-            fontTextExamples[fontFamily][styleSignature].add(textContent.substring(0, 47) + '...');
-        }
+        // Add the text content as an example with the element tag (limit length to avoid huge outputs)
+        const elementTag = node.tagName.toLowerCase();
+        const formattedText = textContent.length <= 50 ? 
+            textContent : 
+            textContent.substring(0, 47) + '...';
+        
+        // Store both text and element tag
+        fontTextExamples[fontFamily][styleSignature].add(`<${elementTag}> ${formattedText}`);
     });
 
     const sortedFontStyles = [];
@@ -57,12 +90,12 @@
         rules.forEach(rule => {
             fontOutput += ` ${rule}\n`;
             
-            // Add text examples as comments
+            // Add text examples as comments with their element tags
             const examples = Array.from(fontTextExamples[key][rule]).slice(0, 3); // Limit to 3 examples
             if (examples.length > 0) {
                 fontOutput += ` /* Text examples: \n`;
                 examples.forEach(example => {
-                    fontOutput += `    "${example}"\n`;
+                    fontOutput += `    ${example}\n`;
                 });
                 fontOutput += ` */\n`;
             }
@@ -74,7 +107,7 @@
 
     const output = sortedFontStyles.join('\n\n');
 
-    console.log("%cExtracted Font Styles with Text Examples:", "color: cyan; font-weight: bold;");
+    console.log("%cExtracted Font Styles with Unique Text Examples:", "color: cyan; font-weight: bold;");
     console.log(output);
 
     return output;
