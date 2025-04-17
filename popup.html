@@ -84,18 +84,6 @@
     .font-table tr.hoverable:hover {
       background-color: #fffde7; /* Light yellow highlight */
     }
-    .font-table tr.hoverable::after {
-      content: '👁️';
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0.3;
-      font-size: 14px;
-    }
-    .font-table tr.hoverable:hover::after {
-      opacity: 1;
-    }
     /* Added status indicator for highlighting */
     .highlight-status {
       display: none;
@@ -113,7 +101,7 @@
   <h2>BrightHR Font Usage Checker</h2>
   <button id="analyze-btn">Analyze Font Usage</button>
   <div class="status" id="status"></div>
-  <div id="highlight-status" class="highlight-status">Hover over a table row to highlight the element in the page</div>
+  <div id="highlight-status" class="highlight-status">Hover over a table row to highlight the element in the page!</div>
   <div id="result"></div>
   <button id="copy-btn" class="copy-btn">Copy Results</button>
   
