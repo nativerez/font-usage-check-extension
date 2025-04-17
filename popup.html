@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Font Usage Checker</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    #result {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 12px;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .status {
+      margin: 10px 0;
+      font-style: italic;
+    }
+    .copy-btn {
+      background-color: #34a853;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Font Usage Checker</h2>
+  <button id="analyze-btn">Analyze Font Usage</button>
+  <div class="status" id="status"></div>
+  <div id="result"></div>
+  <button id="copy-btn" class="copy-btn">Copy Results</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
