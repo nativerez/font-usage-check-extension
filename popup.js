@@ -35,7 +35,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
 });
 
 // Function to display font data in a sortable table
-function displayFontTable(fontData, sortColumn = null, sortDirection = 'asc') {
+function displayFontTable(fontData, sortColumn = 'fontSize', sortDirection = 'desc') {
   const resultDiv = document.getElementById('result');
   resultDiv.textContent = '';
   
