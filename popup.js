@@ -1,10 +1,26 @@
+// Add tab switching functionality
+document.querySelectorAll('.tab-button').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    tab.classList.add('active');
+    const tabId = tab.dataset.tab;
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
 document.getElementById('analyze-btn').addEventListener('click', async () => {
   const statusDiv = document.getElementById('status');
-  const resultDiv = document.getElementById('result');
+  const detailResultDiv = document.getElementById('detail-result');
+  const summaryResultDiv = document.getElementById('summary-result');
   const copyBtn = document.getElementById('copy-btn');
   
   statusDiv.textContent = 'Analyzing fonts...';
-  resultDiv.textContent = '';
+  detailResultDiv.textContent = '';
+  summaryResultDiv.textContent = '';
   copyBtn.style.display = 'none';
   
   try {
@@ -37,6 +53,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
     if (window.fontData && window.fontData.length > 0) {
       statusDiv.textContent = 'Analysis complete!';
       displayFontTable(window.fontData);
+      displaySummaryView(window.fontData);
       copyBtn.style.display = 'block';
     } else {
       statusDiv.textContent = 'No font data found.';
@@ -47,9 +64,9 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
   }
 });
 
-// Function to display font data in a sortable table
+// Function to display font data in a sortable table (Detailed View)
 function displayFontTable(fontData, sortColumn = 'fontSize', sortDirection = 'desc') {
-  const resultDiv = document.getElementById('result');
+  const resultDiv = document.getElementById('detail-result');
   resultDiv.textContent = '';
   
   // Create table
@@ -178,12 +195,169 @@ function displayFontTable(fontData, sortColumn = 'fontSize', sortDirection = 'de
   resultDiv.appendChild(table);
   
   // Show the highlight status message if we have hoverable rows
-  const highlightStatus = document.getElementById('highlight-status');
+  const highlightStatus = document.getElementById('detail-highlight-status');
   if (hasHoverableRows) {
     highlightStatus.style.display = 'block';
   } else {
     highlightStatus.style.display = 'none';
   }
+}
+
+// Function to display summary view
+function displaySummaryView(fontData) {
+  const summaryResultDiv = document.getElementById('summary-result');
+  summaryResultDiv.textContent = '';
+  
+  // Create summary box with total count
+  const totalBox = document.createElement('div');
+  totalBox.className = 'summary-box';
+  totalBox.innerHTML = `
+    <div class="summary-title">Total Font Usage</div>
+    <span class="summary-count">${fontData.length}</span> total font instances found
+  `;
+  summaryResultDiv.appendChild(totalBox);
+  
+  // Group fonts by family
+  const fontFamilies = groupBy(fontData, 'fontFamily');
+  
+  // Create font families section
+  const familiesBox = document.createElement('div');
+  familiesBox.className = 'summary-box';
+  familiesBox.innerHTML = `<div class="summary-title">Font Families (${Object.keys(fontFamilies).length})</div>`;
+  
+  // Sort font families by frequency (descending)
+  const sortedFamilies = Object.keys(fontFamilies).sort((a, b) => 
+    fontFamilies[b].length - fontFamilies[a].length
+  );
+  
+  sortedFamilies.forEach(family => {
+    const instances = fontFamilies[family];
+    const familyDiv = document.createElement('div');
+    familyDiv.className = 'font-group';
+    familyDiv.innerHTML = `${family} <span class="font-group-count">${instances.length}</span>`;
+    
+    // Collect all element IDs for this family
+    const elementIds = instances.map(instance => instance.elementId).filter(Boolean);
+    
+    // Add hover effect to highlight all elements with this font family
+    familyDiv.addEventListener('mouseenter', () => {
+      highlightMultipleElements(elementIds);
+    });
+    
+    familyDiv.addEventListener('mouseleave', () => {
+      removeHighlight();
+    });
+    
+    familiesBox.appendChild(familyDiv);
+  });
+  
+  summaryResultDiv.appendChild(familiesBox);
+  
+  // Group fonts by size
+  const fontSizes = groupBy(fontData, 'fontSize');
+  
+  // Create font sizes section
+  const sizesBox = document.createElement('div');
+  sizesBox.className = 'summary-box';
+  sizesBox.innerHTML = `<div class="summary-title">Font Sizes (${Object.keys(fontSizes).length})</div>`;
+  
+  // Sort font sizes numerically (descending)
+  const sortedSizes = Object.keys(fontSizes).sort((a, b) => {
+    const sizeA = parseFloat(a);
+    const sizeB = parseFloat(b);
+    return sizeB - sizeA;
+  });
+  
+  sortedSizes.forEach(size => {
+    const instances = fontSizes[size];
+    const sizeDiv = document.createElement('div');
+    sizeDiv.className = 'font-group';
+    sizeDiv.innerHTML = `${size} <span class="font-group-count">${instances.length}</span>`;
+    
+    // Collect all element IDs for this size
+    const elementIds = instances.map(instance => instance.elementId).filter(Boolean);
+    
+    // Add hover effect to highlight all elements with this font size
+    sizeDiv.addEventListener('mouseenter', () => {
+      highlightMultipleElements(elementIds);
+    });
+    
+    sizeDiv.addEventListener('mouseleave', () => {
+      removeHighlight();
+    });
+    
+    sizesBox.appendChild(sizeDiv);
+  });
+  
+  summaryResultDiv.appendChild(sizesBox);
+  
+  // Group fonts by weight
+  const fontWeights = groupBy(fontData, 'fontWeight');
+  
+  // Create font weights section
+  const weightsBox = document.createElement('div');
+  weightsBox.className = 'summary-box';
+  weightsBox.innerHTML = `<div class="summary-title">Font Weights (${Object.keys(fontWeights).length})</div>`;
+  
+  // Sort font weights numerically (descending)
+  const sortedWeights = Object.keys(fontWeights).sort((a, b) => {
+    const weightA = isNaN(parseInt(a)) ? 400 : parseInt(a);
+    const weightB = isNaN(parseInt(b)) ? 400 : parseInt(b);
+    return weightB - weightA;
+  });
+  
+  sortedWeights.forEach(weight => {
+    const instances = fontWeights[weight];
+    const weightDiv = document.createElement('div');
+    weightDiv.className = 'font-group';
+    weightDiv.innerHTML = `${weight} <span class="font-group-count">${instances.length}</span>`;
+    
+    // Collect all element IDs for this weight
+    const elementIds = instances.map(instance => instance.elementId).filter(Boolean);
+    
+    // Add hover effect to highlight all elements with this font weight
+    weightDiv.addEventListener('mouseenter', () => {
+      highlightMultipleElements(elementIds);
+    });
+    
+    weightDiv.addEventListener('mouseleave', () => {
+      removeHighlight();
+    });
+    
+    weightsBox.appendChild(weightDiv);
+  });
+  
+  summaryResultDiv.appendChild(weightsBox);
+  
+  // Set highlight status visibility
+  document.getElementById('summary-highlight-status').style.display = 'block';
+}
+
+// Helper function to group items by a specific property
+function groupBy(array, property) {
+  return array.reduce((result, item) => {
+    const key = item[property];
+    if (!result[key]) {
+      result[key] = [];
+    }
+    result[key].push(item);
+    return result;
+  }, {});
+}
+
+// Function to highlight multiple elements on the page
+function highlightMultipleElements(elementIds) {
+  if (!window.currentTabId || !elementIds || elementIds.length === 0) return;
+  
+  // Remove any existing highlight first
+  removeHighlight();
+  
+  chrome.tabs.sendMessage(window.currentTabId, {
+    action: 'highlightMultipleElements',
+    elementIds: elementIds
+  }).catch(error => {
+    console.error('Error highlighting elements:', error);
+  });
 }
 
 // Function to highlight an element in the page
@@ -218,34 +392,58 @@ function sortFontData(column, direction) {
 
 // Add copy to clipboard functionality
 document.getElementById('copy-btn').addEventListener('click', () => {
-  // Convert table to CSV format for copying
-  let csvContent = 'Font Family\tFont Size\tFont Weight\tLine Height\tElement tag\tText Examples\n';
+  // Determine which tab is active
+  const isDetailView = document.getElementById('detail-view').classList.contains('active');
+  let csvContent = '';
   
-  if (window.fontData && window.fontData.length > 0) {
-    window.fontData.forEach(item => {
-      const rowData = [
-        item.fontFamily.replace(/\t/g, ' '),
-        item.fontSize.replace(/\t/g, ' '),
-        item.fontWeight.replace(/\t/g, ' '),
-        item.lineHeight.replace(/\t/g, ' '),
-        item.elementTag.replace(/\t/g, ' '),
-        item.textExample.replace(/\t/g, ' ')
-      ];
-      csvContent += rowData.join('\t') + '\n';
-    });
-  } else {
-    const table = document.querySelector('.font-table');
-    if (table) {
-      const rows = table.querySelectorAll('tbody tr');
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        let rowData = [];
-        cells.forEach(cell => {
-          // Handle tab characters in the cell content
-          let cellText = cell.textContent.replace(/\t/g, ' ');
-          rowData.push(cellText);
-        });
+  if (isDetailView) {
+    // Format detailed view for copying
+    csvContent = 'Font Family\tFont Size\tFont Weight\tLine Height\tElement tag\tText Examples\n';
+    
+    if (window.fontData && window.fontData.length > 0) {
+      window.fontData.forEach(item => {
+        const rowData = [
+          item.fontFamily.replace(/\t/g, ' '),
+          item.fontSize.replace(/\t/g, ' '),
+          item.fontWeight.replace(/\t/g, ' '),
+          item.lineHeight.replace(/\t/g, ' '),
+          item.elementTag.replace(/\t/g, ' '),
+          item.textExample.replace(/\t/g, ' ')
+        ];
         csvContent += rowData.join('\t') + '\n';
+      });
+    }
+  } else {
+    // Format summary view for copying
+    csvContent = 'Summary of Font Usage\n\n';
+    
+    if (window.fontData && window.fontData.length > 0) {
+      // Group by font family
+      const fontFamilies = groupBy(window.fontData, 'fontFamily');
+      csvContent += `Total Font Usage: ${window.fontData.length}\n`;
+      csvContent += `Font Families: ${Object.keys(fontFamilies).length}\n\n`;
+      
+      csvContent += 'Font Families Breakdown:\n';
+      Object.keys(fontFamilies).sort((a, b) => fontFamilies[b].length - fontFamilies[a].length).forEach(family => {
+        csvContent += `${family}: ${fontFamilies[family].length}\n`;
+      });
+      
+      // Group by font size
+      const fontSizes = groupBy(window.fontData, 'fontSize');
+      csvContent += '\nFont Sizes Breakdown:\n';
+      Object.keys(fontSizes).sort((a, b) => parseFloat(b) - parseFloat(a)).forEach(size => {
+        csvContent += `${size}: ${fontSizes[size].length}\n`;
+      });
+      
+      // Group by font weight
+      const fontWeights = groupBy(window.fontData, 'fontWeight');
+      csvContent += '\nFont Weights Breakdown:\n';
+      Object.keys(fontWeights).sort((a, b) => {
+        const weightA = isNaN(parseInt(a)) ? 400 : parseInt(a);
+        const weightB = isNaN(parseInt(b)) ? 400 : parseInt(b);
+        return weightB - weightA;
+      }).forEach(weight => {
+        csvContent += `${weight}: ${fontWeights[weight].length}\n`;
       });
     }
   }

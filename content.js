@@ -169,11 +169,18 @@
         }
     }
 
+    // Store currently highlighted elements
+    window.currentlyHighlighted = null;
+
     // Add message listener to handle element highlighting
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        // Single element highlight
         if (message.action === "highlightElement") {
             const element = window.fontUsageElements[message.elementId];
             if (element) {
+                // Cleanup any existing highlights first
+                removeAllHighlights();
+                
                 // Store original outline
                 const originalOutline = element.style.outline;
                 const originalZIndex = element.style.zIndex;
@@ -191,35 +198,86 @@
                 sendResponse({success: true});
                 
                 // Record that we're highlighting this element
-                window.currentlyHighlighted = {
+                window.currentlyHighlighted = [{
                     element,
                     originalOutline,
                     originalZIndex,
                     originalPosition
-                };
+                }];
             } else {
                 sendResponse({success: false, error: "Element not found"});
             }
             return true; // Required for async response
         }
         
+        // Multiple elements highlight (for summary view)
+        else if (message.action === "highlightMultipleElements") {
+            const elementIds = message.elementIds;
+            if (!elementIds || elementIds.length === 0) {
+                sendResponse({success: false, error: "No element IDs provided"});
+                return true;
+            }
+            
+            // Cleanup any existing highlights first
+            removeAllHighlights();
+            
+            // Track all highlighted elements to restore later
+            window.currentlyHighlighted = [];
+            
+            // Highlight each element
+            elementIds.forEach(id => {
+                const element = window.fontUsageElements[id];
+                if (element) {
+                    // Store original styles
+                    const originalOutline = element.style.outline;
+                    const originalZIndex = element.style.zIndex;
+                    const originalPosition = element.style.position;
+                    
+                    // Apply highlight
+                    element.style.outline = "2px solid red";
+                    element.style.zIndex = "9999";
+                    
+                    // If the element is static, make it relative to ensure z-index works
+                    if (getComputedStyle(element).position === 'static') {
+                        element.style.position = "relative";
+                    }
+                    
+                    // Record that we're highlighting this element
+                    window.currentlyHighlighted.push({
+                        element,
+                        originalOutline,
+                        originalZIndex,
+                        originalPosition
+                    });
+                }
+            });
+            
+            sendResponse({success: true, count: window.currentlyHighlighted.length});
+            return true; // Required for async response
+        }
+        
         else if (message.action === "removeHighlight") {
-            if (window.currentlyHighlighted) {
-                const { element, originalOutline, originalZIndex, originalPosition } = window.currentlyHighlighted;
+            removeAllHighlights();
+            sendResponse({success: true});
+            return true; // Required for async response
+        }
+    });
+    
+    // Helper function to remove all highlights
+    function removeAllHighlights() {
+        if (window.currentlyHighlighted) {
+            window.currentlyHighlighted.forEach(highlighted => {
+                const { element, originalOutline, originalZIndex, originalPosition } = highlighted;
                 
                 // Restore original styles
                 element.style.outline = originalOutline;
                 element.style.zIndex = originalZIndex;
                 element.style.position = originalPosition;
-                
-                window.currentlyHighlighted = null;
-                sendResponse({success: true});
-            } else {
-                sendResponse({success: false, error: "No element currently highlighted"});
-            }
-            return true; // Required for async response
+            });
+            
+            window.currentlyHighlighted = null;
         }
-    });
+    }
     
     // Analyze and return the results
     return analyzeFontUsage();

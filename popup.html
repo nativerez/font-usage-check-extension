@@ -144,6 +144,74 @@
     .toggle-label {
       font-size: 12px;
     }
+    
+    /* Tab styling */
+    .tab-container {
+      margin-bottom: 15px;
+    }
+    .tab-navigation {
+      display: flex;
+      border-bottom: 1px solid #ccc;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      background-color: #f2f2f2;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      margin-right: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tab-button.active {
+      background-color: white;
+      border-bottom: 1px solid white;
+      margin-bottom: -1px;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Summary view specific styles */
+    .summary-box {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 15px;
+      background-color: #f9f9f9;
+    }
+    .summary-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .summary-count {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4285f4;
+      margin-right: 8px;
+    }
+    .font-group {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .font-group:hover {
+      background-color: #fffde7;
+    }
+    .font-group-count {
+      display: inline-block;
+      padding: 2px 6px;
+      background-color: #4285f4;
+      color: white;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -159,8 +227,24 @@
   
   <button id="analyze-btn">Analyze Font Usage</button>
   <div class="status" id="status"></div>
-  <div id="highlight-status" class="highlight-status">Hover over a table row to highlight the element in the page!</div>
-  <div id="result"></div>
+  
+  <div class="tab-container">
+    <div class="tab-navigation">
+      <div class="tab-button active" data-tab="detail-view">Detailed View</div>
+      <div class="tab-button" data-tab="summary-view">Summary View</div>
+    </div>
+    
+    <div id="detail-view" class="tab-content active">
+      <div id="detail-highlight-status" class="highlight-status">Hover over a table row to highlight the element in the page!</div>
+      <div id="detail-result"></div>
+    </div>
+    
+    <div id="summary-view" class="tab-content">
+      <div id="summary-highlight-status" class="highlight-status">Hover over a font style to highlight all matching elements!</div>
+      <div id="summary-result"></div>
+    </div>
+  </div>
+  
   <button id="copy-btn" class="copy-btn">Copy Results</button>
   
   <script src="popup.js"></script>
