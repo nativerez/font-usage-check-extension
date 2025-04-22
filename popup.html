@@ -95,10 +95,68 @@
       color: #2e7d32;
       text-align: center;
     }
+    /* Toggle switch styling */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: #4285f4;
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .toggle-label {
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
   <h2>BrightHR Font Usage Checker</h2>
+  
+  <div class="toggle-container">
+    <label class="toggle-switch">
+      <input type="checkbox" id="include-hidden">
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-label">Include hidden elements</span>
+  </div>
+  
   <button id="analyze-btn">Analyze Font Usage</button>
   <div class="status" id="status"></div>
   <div id="highlight-status" class="highlight-status">Hover over a table row to highlight the element in the page!</div>

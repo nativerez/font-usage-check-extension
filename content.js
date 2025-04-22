@@ -7,6 +7,9 @@
     function analyzeFontUsage() {
         const fontData = [];
         const textToElement = new Map(); // Map to track unique text and their most specific elements
+        
+        // Check if we should include hidden elements (from the preference passed by popup.js)
+        const includeHidden = window.fontAnalysisIncludeHidden || false;
     
         // First pass: Collect all texts and their deepest elements (depth-first traversal)
         function processNode(node, depth = 0) {
@@ -53,8 +56,11 @@
                     
                     const computedStyle = window.getComputedStyle(node);
                     
-                    // Skip if not visible
-                    if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+                    // Check if the element is hidden
+                    const isHidden = computedStyle.display === 'none' || computedStyle.visibility === 'hidden';
+                    
+                    // Skip if not visible and includeHidden is false
+                    if (isHidden && !includeHidden) {
                         return;
                     }
                     
@@ -73,15 +79,19 @@
                     const elementId = `font-element-${elementIdCounter++}`;
                     window.fontUsageElements[elementId] = node;
                     
+                    // Add visibility status to the data if the element is hidden
+                    const visibilityInfo = isHidden ? ' (hidden)' : '';
+                    
                     // Add as structured data
                     fontData.push({
                         fontFamily,
                         fontSize,
                         fontWeight,
                         lineHeight,
-                        elementTag,
+                        elementTag: elementTag + visibilityInfo,
                         textExample: formattedText,
-                        elementId // Add the element ID to the data
+                        elementId, // Add the element ID to the data
+                        isHidden
                     });
                 } catch (err) {
                     console.error("Error processing a text element:", err);
@@ -103,8 +113,11 @@
                     if (textContent && textContent.length > 0) {
                         const computedStyle = window.getComputedStyle(element);
                         
-                        // Skip if not visible
-                        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+                        // Check if the element is hidden
+                        const isHidden = computedStyle.display === 'none' || computedStyle.visibility === 'hidden';
+                        
+                        // Skip if not visible and includeHidden is false
+                        if (isHidden && !includeHidden) {
                             continue;
                         }
                         
@@ -123,14 +136,18 @@
                         const elementId = `font-element-${elementIdCounter++}`;
                         window.fontUsageElements[elementId] = element;
                         
+                        // Add visibility status to the data if the element is hidden
+                        const visibilityInfo = isHidden ? ' (hidden)' : '';
+                        
                         fontData.push({
                             fontFamily,
                             fontSize,
                             fontWeight,
                             lineHeight,
-                            elementTag,
+                            elementTag: elementTag + visibilityInfo,
                             textExample: formattedText,
-                            elementId // Add the element ID to the data
+                            elementId, // Add the element ID to the data
+                            isHidden
                         });
                     }
                 }

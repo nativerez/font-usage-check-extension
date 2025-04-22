@@ -11,6 +11,19 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
     // Get the current active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
+    // Get the state of the include hidden elements toggle
+    const includeHidden = document.getElementById('include-hidden').checked;
+    
+    // First inject the function with the includeHidden parameter
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (includeHidden) => {
+        // Store the preference on the window object so content.js can access it
+        window.fontAnalysisIncludeHidden = includeHidden;
+      },
+      args: [includeHidden]
+    });
+    
     // Execute the content script in the current tab
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
