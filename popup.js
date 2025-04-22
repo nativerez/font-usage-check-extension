@@ -17,6 +17,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
   const detailResultDiv = document.getElementById('detail-result');
   const summaryResultDiv = document.getElementById('summary-result');
   const copyBtn = document.getElementById('copy-btn');
+  const tabContainer = document.getElementById('tab-container');
   
   statusDiv.textContent = 'Analyzing fonts...';
   detailResultDiv.textContent = '';
@@ -55,6 +56,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
       displayFontTable(window.fontData);
       displaySummaryView(window.fontData);
       copyBtn.style.display = 'block';
+      tabContainer.style.display = 'block'; // Show the tab container after analysis
     } else {
       statusDiv.textContent = 'No font data found.';
     }

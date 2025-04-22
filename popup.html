@@ -7,6 +7,8 @@
       width: 600px;
       padding: 10px;
       font-family: Arial, sans-serif;
+      position: relative;
+      min-height: 400px;
     }
     button {
       background-color: #4285f4;
@@ -36,6 +38,12 @@
       background-color: #34a853;
       margin-top: 10px;
       display: none;
+      position: sticky;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      z-index: 10;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
     }
     .font-table {
       width: 100%;
@@ -148,6 +156,7 @@
     /* Tab styling */
     .tab-container {
       margin-bottom: 15px;
+      display: none; /* Hide tabs initially */
     }
     .tab-navigation {
       display: flex;
@@ -228,7 +237,7 @@
   <button id="analyze-btn">Analyze Font Usage</button>
   <div class="status" id="status"></div>
   
-  <div class="tab-container">
+  <div class="tab-container" id="tab-container">
     <div class="tab-navigation">
       <div class="tab-button active" data-tab="detail-view">Detailed View</div>
       <div class="tab-button" data-tab="summary-view">Summary View</div>
