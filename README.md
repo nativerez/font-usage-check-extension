@@ -1,4 +1,4 @@
-# How to install this Extension
+# How to install this Extension (I plan to publish this to the storefront soon)
 
 1. Clone/Download this repository to your ~/Downloads folder (if downloading, make sure you unpack/unzip first!)
 2. Open Chrome and navigate to chrome://extensions/
