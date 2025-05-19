@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "BrightHR Font Usage Checker",
+  "name": "Font Detective",
   "version": "1.0",
   "description": "Analyzes and extracts font styles used in a webpage with examples.",
   "action": {
