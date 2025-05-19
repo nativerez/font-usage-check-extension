@@ -3,6 +3,9 @@
 
 **Font Detective** lets you uncover every font on any webpage in an instant—no source-code digging required. With a single button press, instantly see all the typographic details you need.
 
+![image](https://github.com/user-attachments/assets/ef89367f-55d3-46ca-8ec0-7cf5571db6b8)
+
+
 ---
 
 ## Features
